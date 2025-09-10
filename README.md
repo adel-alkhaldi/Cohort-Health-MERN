@@ -6,7 +6,7 @@ An MVP MERN stack admin dashboard for managing cohorts, sessions, participants, 
 
 ## Prerequisites
 
-- **Node.js** (npm comes packages with it as well)
+- **Node.js** (npm comes packaged with it as well)
 
 ---
 
