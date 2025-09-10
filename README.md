@@ -49,6 +49,10 @@ PORT=3000
 MONGO_URI=mongodb+srv://test:test@cluster0.r02bnfb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
 ```
 
+### **Frontend Port Configuration**
+
+Incase you wanted to change ports, access vite.config.js and change the port as you wish
+
 ## Running the Project
 
 ### **Start the Backend**
