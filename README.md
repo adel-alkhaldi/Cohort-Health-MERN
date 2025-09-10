@@ -6,10 +6,7 @@ An MVP MERN stack admin dashboard for managing cohorts, sessions, participants, 
 
 ## Prerequisites
 
-- **Node.js** (v18+ recommended)
-- **npm** (comes with Node.js)
-- **MongoDB Atlas** account (or local MongoDB server)
-- **Git** (for cloning the repository)
+- **Node.js** (npm comes packages with it as well)
 
 ---
 
