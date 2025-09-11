@@ -80,3 +80,52 @@ npm run dev
 - Use the sidebar to navigate between Dashboard, Weekly Reports, Watch Cases, Admin Actions, and Session Viewer.
 - Use **Admin Actions** to add participants, sessions, attendance, and incidents.
 
+---
+
+# Roadmap
+
+## V1.1
+- [ ] General code cleanup of unused functions in frontend pages & backend services & controllers
+
+## V1.2
+- [ ] Add Full Validation to the data in the backend  
+  - [ ] EID needs to be 15 digits exactly (starting with **784**)  
+  - [ ] Numbers need to have **+971** for the country code & be 13 digits in total  
+  - [ ] Refine the Watch Cases for the current metrics (if they are above or below a certain range)
+
+## V1.3
+- [ ] Refine the error messages and make it more obvious which input field is incorrect
+
+## V1.4
+- [ ] Split up Admin Actions Page into multiple routes and separate pages for later **RBAC Login Setup**
+
+## V1.5
+- [ ] Session Attendance displays statistics
+
+## V1.6
+- [ ] Implement **React Context Hooks** to auto-update on the frontend when submitting data without retriggering the API to refresh data
+
+## V1.7
+- [ ] Finalize UI using **Material UI** or **Tailwind CSS**  
+  - [ ] Make the UI tablet-friendly (no need for mobile dashboards)
+
+## V1.8
+- [ ] Rework the backend with an **auto-aggregator** for a `WeeklyReports` collection that runs every Sunday night
+
+## V1.9
+- [ ] Implement **JWT Authentication**
+
+## V2.0
+- [ ] Multiple User Login with Authorization & Authentication:  
+  - [ ] **Coaches** can view their own sessions & their analytics  
+  - [ ] **Participants** can book sessions in advance  
+  - [ ] **Admins** can view dashboards & weekly reports
+
+---
+
+# Project Completion
+- [ ] Rework Documentation & Non-Functional/Functional Requirements  
+- [ ] Create **Use Case Diagrams**  
+- [ ] Create a **Sequence Diagram**
+
+
