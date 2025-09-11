@@ -3,6 +3,7 @@ import { getAllReportWeeks, getWeeklyReport, getCohorts } from "../services/api"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, LabelList } from "recharts";
 import StatBox from "../components/StatBox";
 import SectionTitle from "../components/SectionTitle";
+import Table from "../components/Table";
 
 // Custom tooltip and legend classes for recharts
 const tooltipProps = {
@@ -51,6 +52,7 @@ const Reports = () => {
     e.preventDefault();
     if (!cohort || !selectedWeek) return;
     setLoading(true);
+    setReport(null); // Clear previous report before fetching new
     try {
       const data = await getWeeklyReport(cohort, selectedWeek);
       setReport(data[0] || null);
@@ -88,6 +90,19 @@ const Reports = () => {
         { label: "Incidents Count", value: report.incidentsCount }
       ]
     : [];
+
+  const attendanceColumns = [
+    { label: "Participant Name", render: att => att.participantName ?? att.participantId ?? "-" },
+    { label: "Attendance Date", render: att => att.attendanceDate ? new Date(att.attendanceDate).toLocaleDateString() : "-" },
+    { label: "Attended", render: att => att.hasAttended ? "Yes" : "No" },
+    { label: "BP Systolic", render: att => att.sessionVitals?.bpSystolic ?? "-" },
+    { label: "BP Diastolic", render: att => att.sessionVitals?.bpDiastolic ?? "-" },
+    { label: "Weight", render: att => att.sessionVitals?.weight ?? "-" },
+    { label: "Glucose (mg/dl)", render: att => att.sessionVitals?.glucoseMgdl ?? "-" },
+    { label: "RHR", render: att => att.sessionVitals?.RHR ?? "-" },
+    { label: "Grip Strength (Sec)", render: att => att.sessionVitals?.GripStrengthSec ?? "-" },
+    { label: "Hba1c", render: att => att.sessionVitals?.Hba1c ?? "-" }
+  ];
 
   return (
     <div className="reports-container">
@@ -180,32 +195,14 @@ const Reports = () => {
             </ResponsiveContainer>
           </div>
 
-          {report && report.attendanceCodes && (
+          {report.attendanceDetails && (
             <div style={{ marginTop: "2rem" }}>
-              <SectionTitle>Attendance Codes for the Week</SectionTitle>
-              <div className="table-container">
-                <table className="table-main">
-                  <thead>
-                    <tr>
-                      <th>Attendance Code</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Array.isArray(report.attendanceCodes)
-                      ? report.attendanceCodes.map(code => (
-                          <tr key={code}>
-                            <td>{code}</td>
-                          </tr>
-                        ))
-                      : (
-                          <tr>
-                            <td>{report.attendanceCodes}</td>
-                          </tr>
-                        )
-                    }
-                  </tbody>
-                </table>
-              </div>
+              <SectionTitle>Attendance Details for the Week</SectionTitle>
+              <Table
+                columns={attendanceColumns}
+                data={report.attendanceDetails}
+                keyField="sessionId" // Use sessionId or a unique field from backend
+              />
             </div>
           )}
         </div>

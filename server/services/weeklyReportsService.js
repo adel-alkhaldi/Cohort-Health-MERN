@@ -66,7 +66,17 @@ export async function getWeeklyReport(cohort, weekStart) {
         totalAttendanceRecords: { $sum: 1 },
         retentionCount: { $sum: { $cond: ["$attendances.hasAttended", 1, 0] } },
         incidents: { $push: "$incidents" },
-        attendanceCodes: { $addToSet: "$attendances.attendanceCode" }
+        attendanceCodes: { $addToSet: "$attendances.attendanceCode" },
+        attendanceDetails: {
+          $addToSet: {
+            participantId: "$_id",
+            participantName: "$fullName",
+            sessionId: "$attendances.sessionId",
+            attendanceDate: "$attendances.date",
+            hasAttended: "$attendances.hasAttended",
+            sessionVitals: "$attendances.sessionVitals"
+          }
+        }
       }
     },
     {
@@ -105,7 +115,8 @@ export async function getWeeklyReport(cohort, weekStart) {
             }
           }
         },
-        attendanceCodes: 1
+        attendanceCodes: 1,
+        attendanceDetails: 1 // <-- Add this line
       }
     }
   ];
