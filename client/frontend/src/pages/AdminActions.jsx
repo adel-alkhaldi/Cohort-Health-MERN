@@ -13,7 +13,6 @@ const initialForms = {
   attendance: {
     participantId: "",
     sessionId: "",
-    attendanceCode: "", 
     date: "",
     hasAttended: true,
     sessionVitals: {}
@@ -48,7 +47,8 @@ const initialForms = {
     }
   },
   incident: {
-    attendanceId: "",
+    EID: "", // Add EID field
+    sessionId: "", // Add sessionId field
     severity: "Medium",
     description: "",
     actions: "",
@@ -125,15 +125,23 @@ const AdminActions = () => {
         await api.post("/participants", form.participant);
         setMessage("Participant registered successfully!");
       } else if (selectedAction === "incident") {
-        // Lookup attendance by code
-        const attendance = await fetchAttendanceByCode(form.incident.attendanceCode);
+        // Find attendance by EID and sessionId
+        const { EID, sessionId, ...incidentData } = form.incident;
+        let attendance = null;
+        try {
+          const res = await api.get(`/sessions/${sessionId}/attendances`);
+          attendance = res.data.find(a => a.participantId?.EID === EID);
+        } catch {
+          setMessage("Error: Attendance not found for given EID and session.");
+          return;
+        }
         if (!attendance || !attendance._id) {
-          setMessage("Error: Attendance code not found.");
+          setMessage("Error: Attendance not found for given EID and session.");
           return;
         }
         await api.post("/incidents", {
-          ...form.incident,
-          attendanceId: attendance._id // Use resolved ObjectId (I really needed more time...)
+          ...incidentData,
+          attendanceId: attendance._id
         });
         setMessage("Incident created successfully!");
       }
@@ -222,16 +230,6 @@ const AdminActions = () => {
               className="admin-actions-checkbox"
               checked={form.attendance.hasAttended}
               onChange={e => handleInputChange("attendance", "hasAttended", e.target.checked)}
-            />
-          </label>
-          <label className="admin-actions-label">Attendance Code
-            <input
-              type="text"
-              className="admin-actions-input"
-              placeholder="Attendance Code"
-              value={form.attendance.attendanceCode}
-              onChange={e => handleInputChange("attendance", "attendanceCode", e.target.value)}
-              required
             />
           </label>
           <h4 style={{ marginTop: "1.5rem" }}>Session Vitals</h4>
@@ -490,15 +488,30 @@ const AdminActions = () => {
       {selectedAction === "incident" && (
         <form onSubmit={handleSubmit} className="admin-actions-form">
           <h3 style={{ textAlign: "center" }}>Create Incident from Attendance</h3>
-          <label className="admin-actions-label">Attendance Code
+          <label className="admin-actions-label">Participant EID
             <input
               type="text"
               className="admin-actions-input"
-              placeholder="Attendance Code"
-              value={form.incident.attendanceCode || ""}
-              onChange={e => handleInputChange("incident", "attendanceCode", e.target.value)}
+              placeholder="Participant EID"
+              value={form.incident.EID}
+              onChange={e => handleInputChange("incident", "EID", e.target.value)}
               required
             />
+          </label>
+          <label className="admin-actions-label">Session
+            <select
+              className="admin-actions-select-input"
+              value={form.incident.sessionId}
+              onChange={e => handleInputChange("incident", "sessionId", e.target.value)}
+              required
+            >
+              <option value="">Select Session</option>
+              {sessions.map(s => (
+                <option key={s._id} value={s._id}>
+                  {s.sessionCode} - {new Date(s.date).toLocaleDateString()} ({s.site.name})
+                </option>
+              ))}
+            </select>
           </label>
           <label className="admin-actions-label">Severity
             <select

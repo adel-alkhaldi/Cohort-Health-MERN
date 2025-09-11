@@ -5,7 +5,6 @@ const { Schema, model, Types } = mongoose;
 const attendanceSchema = new Schema({
   participantId: { type: Types.ObjectId, ref: "Participant", required: true },
   sessionId: { type: Types.ObjectId, ref: "Session", required: true },
-  attendanceCode: { type: String, required: true, unique: true }, // Used in the frontend, because objectIDs are not a viable way of reference in forms
   date: { type: Date, required: true }, // Date of the session Itself
   hasAttended: { type: Boolean, default: true },
   sessionVitals: {

@@ -4,7 +4,6 @@ import Table from "../components/Table";
 import SectionTitle from "../components/SectionTitle";
 
 const columns = [
-  { label: "Attendance Code", field: "attendanceCode" },
   { label: "Participant EID", render: row => row.participantId?.EID ?? "-" },
   { label: "Full Name", render: row => row.participantId?.fullName ?? "-" },
   { label: "Gender", render: row => row.participantId?.gender ?? "-" },

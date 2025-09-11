@@ -39,6 +39,4 @@ router.post("/incidents", incidentController.create);
 
 router.get("/sessions/:sessionId/attendances", sessionAttendanceController.listBySession);
 
-router.get("/attendance/by-code/:code", attendanceController.getByCode);
-
 export default router;

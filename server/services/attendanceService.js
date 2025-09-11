@@ -21,10 +21,9 @@ export async function createAttendance(data) {
   }
   // Calculate weekStart from date if not provided from helper function above
   if (data.date && !data.weekStart) {
-    // Calculate weekStart from date if not provided from helper function above
+  // Calculate weekStart from date if not provided from helper function above
     data.weekStart = getWeekStart(data.date);
   }
-  if (!data.attendanceCode) throw new Error("attendanceCode is required"); // <-- Add this validation
   const attendance = await Attendance.create(data);
 
   // Check for flag condition
