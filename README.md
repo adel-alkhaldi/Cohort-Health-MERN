@@ -117,9 +117,9 @@ npm run dev
 
 ## V2.0
 - [ ] Multiple User Login with Authorization & Authentication:  
-  - [ ] **Coaches** can view their own sessions & their analytics  
+  - [ ] **Coaches** can view their own sessions & session's analytics  
   - [ ] **Participants** can book sessions in advance  
-  - [ ] **Admins** can view dashboards & weekly reports
+  - [ ] **Admins** can view dashboards & weekly reports & create cohorts and declare them active or inactive
 
 ---
 
