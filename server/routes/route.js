@@ -39,4 +39,7 @@ router.post("/incidents", incidentController.create);
 
 router.get("/sessions/:sessionId/attendances", sessionAttendanceController.listBySession);
 
+// QUICK FIX: Route wasn't added to get attendance by EID and sessionId (Error on frontend when creating incident)
+router.get("/attendance/by-eid-session", attendanceController.getByEIDAndSession);
+
 export default router;

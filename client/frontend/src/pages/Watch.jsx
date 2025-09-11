@@ -15,13 +15,13 @@ const watchColumns = [
         ? new Date(row.attendanceDate).toLocaleDateString()
         : "-",
   },
-  {
-    label: "Session Vitals",
-    render: (row) =>
-      row.sessionVitals
-        ? `BP: ${row.sessionVitals.bpSystolic ?? "-"} / ${row.sessionVitals.bpDiastolic ?? "-"}, Weight: ${row.sessionVitals.weight ?? "-"}`
-        : "-",
-  },
+  { label: "BP Systolic", render: (row) => row.sessionVitals?.bpSystolic ?? "-" },
+  { label: "BP Diastolic", render: (row) => row.sessionVitals?.bpDiastolic ?? "-" },
+  { label: "Weight", render: (row) => row.sessionVitals?.weight ?? "-" },
+  { label: "Glucose (mg/dl)", render: (row) => row.sessionVitals?.glucoseMgdl ?? "-" },
+  { label: "RHR", render: (row) => row.sessionVitals?.RHR ?? "-" },
+  { label: "Grip Strength (Sec)", render: (row) => row.sessionVitals?.GripStrengthSec ?? "-" },
+  { label: "Hba1c", render: (row) => row.sessionVitals?.Hba1c ?? "-" }
 ];
 
 const Watch = () => {

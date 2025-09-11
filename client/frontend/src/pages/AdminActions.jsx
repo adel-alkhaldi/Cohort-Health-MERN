@@ -125,23 +125,17 @@ const AdminActions = () => {
         await api.post("/participants", form.participant);
         setMessage("Participant registered successfully!");
       } else if (selectedAction === "incident") {
-        // Find attendance by EID and sessionId
-        const { EID, sessionId, ...incidentData } = form.incident;
-        let attendance = null;
-        try {
-          const res = await api.get(`/sessions/${sessionId}/attendances`);
-          attendance = res.data.find(a => a.participantId?.EID === EID);
-        } catch {
-          setMessage("Error: Attendance not found for given EID and session.");
-          return;
-        }
-        if (!attendance || !attendance._id) {
-          setMessage("Error: Attendance not found for given EID and session.");
-          return;
-        }
+        // QUICK FIX: Lookup attendance by EID and sessionId
+        const { EID, sessionId, severity, description, actions, closure } = form.incident;
+        const attendanceRes = await api.get(`/attendance/by-eid-session?EID=${EID}&sessionId=${sessionId}`);
+        const attendance = attendanceRes.data;
+        if (!attendance || !attendance._id) throw new Error("Attendance not found for given EID and session");
         await api.post("/incidents", {
-          ...incidentData,
-          attendanceId: attendance._id
+          attendanceId: attendance._id,
+          severity,
+          description,
+          actions,
+          closure
         });
         setMessage("Incident created successfully!");
       }
