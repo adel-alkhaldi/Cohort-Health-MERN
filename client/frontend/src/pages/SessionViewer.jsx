@@ -3,9 +3,16 @@ import { getSessions, getSessionAttendances } from "../services/api";
 import Table from "../components/Table";
 import SectionTitle from "../components/SectionTitle";
 
+const maskEID = eid => {
+  if (typeof eid !== "string") return "-";
+  return eid.length > 3
+    ? "*".repeat(eid.length - 3) + eid.slice(-3)
+    : eid;
+};
+
 const columns = [
   { label: "Attendance Code", field: "attendanceCode" },
-  { label: "Participant EID", render: row => row.participantId?.EID ?? "-" },
+  { label: "Participant EID", render: row => maskEID(row.participantId?.EID) },
   { label: "Full Name", render: row => row.participantId?.fullName ?? "-" },
   { label: "Gender", render: row => row.participantId?.gender ?? "-" },
   { label: "Age", render: row => row.participantId?.age ?? "-" },
