@@ -11,17 +11,6 @@ export async function create(req, res) {
   }
 }
 
-export async function getByCode(req, res) {
-  try {
-    const { code } = req.params;
-    const attendance = await Attendance.findOne({ attendanceCode: code });
-    if (!attendance) return res.status(404).json({ error: "Attendance not found" });
-    res.json(attendance);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-}
-
 // QUICK FIX: New controller to get attendance by EID and sessionId
 export async function getByEIDAndSession(req, res) {
   try {
@@ -37,4 +26,20 @@ export async function getByEIDAndSession(req, res) {
   }
 }
 
-export default { create, getByCode, getByEIDAndSession };
+// Get all attendances for a participant by EID
+export async function getByEID(req, res) {
+  try {
+    const { EID } = req.params;
+    if (!EID) return res.status(400).json({ error: "EID is required" });
+    const participant = await Participant.findOne({ EID });
+    if (!participant) return res.status(404).json({ error: "Participant not found" });
+    const attendances = await Attendance.find({ participantId: participant._id })
+      .populate("sessionId")
+      .sort({ date: -1 });
+    res.json(attendances);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+}
+
+export default { create, getByEIDAndSession, getByEID };

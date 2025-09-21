@@ -1,5 +1,4 @@
 import { registerParticipant } from "../services/participantService.js";
-import Participant from "../models/Participant.js";
 
 export async function register(req, res) {
   try {

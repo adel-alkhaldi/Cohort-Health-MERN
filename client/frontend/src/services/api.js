@@ -64,4 +64,43 @@ export const getSessionAttendances = async (sessionId) => {
   return res.data;
 };
 
+// Admin Actions APIs
+
+// Add Attendance
+export const addAttendance = async (attendanceData) => {
+  const res = await api.post("/attendance", attendanceData);
+  return res.data;
+};
+
+// Create Session
+export const createSession = async (sessionData) => {
+  const res = await api.post("/sessions", sessionData);
+  return res.data;
+};
+
+// Create Participant
+export const registerParticipant = async (participantData) => {
+  const res = await api.post("/participants", participantData);
+  return res.data;
+};
+
+
+// Get Attendance by EID and Session for Incident Creation
+export const getAttendanceByEIDAndSession = async (EID, sessionId) => {
+  const res = await api.get(`/attendance/by-eid-session?EID=${EID}&sessionId=${sessionId}`);
+  return res.data;
+};
+
+// Get Attendances by EID
+export const getAttendancesByEID = async (EID) => {
+  const res = await api.get(`/attendance/by-eid/${EID}`);
+  return res.data;
+};
+
+// Create Incident
+export const createIncident = async (incidentData) => {
+  const res = await api.post("/incidents", incidentData);
+  return res.data;
+};
+
 export default api;

@@ -8,8 +8,8 @@ import cors from "cors";
 dotenv.config();
 
 // (MONGO_URI has Connection & its setup to allow anyone to connect & has seed data)
-const MONGO_URI = process.env.MONGO_URI || "test:test@cluster0.r02bnfb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"; 
-const PORT = process.env.PORT || 3000; 
+const MONGO_URI = process.env.MONGO_URI; 
+const PORT = process.env.PORT;
 
 const app = express();
 app.use(cors());

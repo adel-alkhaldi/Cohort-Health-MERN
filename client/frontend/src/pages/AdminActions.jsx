@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
-import { getCohorts, getSessions } from "../services/api";
-import api from "../services/api";
+import {
+  getCohorts,
+  getSessions,
+  addAttendance,
+  createSession,
+  registerParticipant,
+  getAttendanceByEIDAndSession,
+  createIncident,
+  getAttendancesByEID
+} from "../services/api";
 
 const actions = [
   { value: "attendance", label: "Add Attendance" },
@@ -47,8 +55,8 @@ const initialForms = {
     }
   },
   incident: {
-    EID: "", // Add EID field
-    sessionId: "", // Add sessionId field
+    EID: "",
+    sessionId: "", 
     severity: "Medium",
     description: "",
     actions: "",
@@ -56,15 +64,20 @@ const initialForms = {
   }
 };
 
+const eidRegex = /^784\d{12}$/;
+const phoneRegex = /^\+971\d{9}$/;
+
 const AdminActions = () => {
   const [selectedAction, setSelectedAction] = useState("");
   const [form, setForm] = useState(initialForms);
   const [cohorts, setCohorts] = useState([]);
-  const [sessions, setSessions] = useState([]); // <-- Add this
+  const [sessions, setSessions] = useState([]);
   const [message, setMessage] = useState("");
-  const [attendanceCodeLookup, setAttendanceCodeLookup] = useState(""); // <-- Add this
+  const [validationError, setValidationError] = useState("");
+  const [incidentAttendances, setIncidentAttendances] = useState([]);
+  const [incidentEID, setIncidentEID] = useState("");
+  const [loadingAttendances, setLoadingAttendances] = useState(false);
 
-  // Load cohorts and sessions for dropdowns
   useEffect(() => {
     getCohorts().then(setCohorts);
     getSessions().then(setSessions);
@@ -92,26 +105,34 @@ const AdminActions = () => {
     }));
   };
 
-  // Helper to get attendance by code (user enters code, we lookup to get ObjectId, saves time if it is incorrect (I kept messing up this part alot...))
-  const fetchAttendanceByCode = async (code) => {
-    if (!code) return null;
-    try {
-      const res = await api.get(`/attendance/by-code/${code}`);
-      return res.data;
-    } catch {
-      return null;
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
+    setValidationError("");
+
+    // --- Frontend validation for participant registration ---
+    if (selectedAction === "participant") {
+      const p = form.participant;
+      if (!eidRegex.test(p.EID)) {
+        setValidationError("EID must be 15 digits, start with 784.");
+        return;
+      }
+      if (!phoneRegex.test(p.contactInfo.phoneNumber)) {
+        setValidationError("Phone number must start with +971 and be 13 digits after +.");
+        return;
+      }
+      if (!phoneRegex.test(p.emergencyContact.phoneNumber)) {
+        setValidationError("Emergency contact phone must start with +971 and be 13 digits after +.");
+        return;
+      }
+    }
+
     try {
       if (selectedAction === "attendance") {
-        await api.post("/attendance", form.attendance);
+        await addAttendance(form.attendance);
         setMessage("Attendance added successfully!");
       } else if (selectedAction === "session") {
-        await api.post("/sessions", {
+        await createSession({
           sessionCode: form.session.sessionCode,
           site: { name: form.session.siteName, location: form.session.siteLocation },
           date: form.session.date,
@@ -122,16 +143,13 @@ const AdminActions = () => {
         });
         setMessage("Session created successfully!");
       } else if (selectedAction === "participant") {
-        await api.post("/participants", form.participant);
+        await registerParticipant(form.participant);
         setMessage("Participant registered successfully!");
       } else if (selectedAction === "incident") {
-        // QUICK FIX: Lookup attendance by EID and sessionId
-        const { EID, sessionId, severity, description, actions, closure } = form.incident;
-        const attendanceRes = await api.get(`/attendance/by-eid-session?EID=${EID}&sessionId=${sessionId}`);
-        const attendance = attendanceRes.data;
-        if (!attendance || !attendance._id) throw new Error("Attendance not found for given EID and session");
-        await api.post("/incidents", {
-          attendanceId: attendance._id,
+        const { attendanceId, severity, description, actions, closure } = form.incident;
+        if (!attendanceId) throw new Error("Please select a session attendance.");
+        await createIncident({
+          attendanceId,
           severity,
           description,
           actions,
@@ -475,6 +493,9 @@ const AdminActions = () => {
               />
             </label>
           ))}
+          {validationError && (
+            <div className="admin-actions-message error center">{validationError}</div>
+          )}
           <button type="submit" className="admin-actions-input">Register Participant</button>
         </form>
       )}
@@ -487,25 +508,56 @@ const AdminActions = () => {
               type="text"
               className="admin-actions-input"
               placeholder="Participant EID"
-              value={form.incident.EID}
-              onChange={e => handleInputChange("incident", "EID", e.target.value)}
+              value={incidentEID}
+              onChange={e => {
+                setIncidentEID(e.target.value);
+                setForm(prev => ({
+                  ...prev,
+                  incident: { ...prev.incident, attendanceId: "", EID: e.target.value }
+                }));
+                setIncidentAttendances([]); // Clear attendances on EID change
+              }}
               required
             />
+            <button
+              type="button"
+              className="btn"
+              style={{ marginLeft: "1rem", marginTop: "0" }}
+              onClick={async () => {
+                setLoadingAttendances(true);
+                setIncidentAttendances([]);
+                try {
+                  const data = await getAttendancesByEID(incidentEID);
+                  setIncidentAttendances(data);
+                } catch {
+                  setIncidentAttendances([]);
+                }
+                setLoadingAttendances(false);
+              }}
+              disabled={!incidentEID}
+            >
+              Get Participant's Session Attendences
+            </button>
           </label>
-          <label className="admin-actions-label">Session
+          <label className="admin-actions-label">
             <select
               className="admin-actions-select-input"
-              value={form.incident.sessionId}
-              onChange={e => handleInputChange("incident", "sessionId", e.target.value)}
+              value={form.incident.attendanceId || ""}
+              onChange={e => setForm(prev => ({
+                ...prev,
+                incident: { ...prev.incident, attendanceId: e.target.value }
+              }))}
               required
+              disabled={!incidentAttendances.length}
             >
               <option value="">Select Session</option>
-              {sessions.map(s => (
-                <option key={s._id} value={s._id}>
-                  {s.sessionCode} - {new Date(s.date).toLocaleDateString()} ({s.site.name})
+              {incidentAttendances.map(att => (
+                <option key={att._id} value={att._id}>
+                  {att.sessionId?.sessionCode || "Session"} - {att.date ? new Date(att.date).toLocaleDateString() : ""} ({att.sessionId?.site?.name || ""})
                 </option>
               ))}
             </select>
+            {loadingAttendances && <span style={{ marginLeft: "1rem" }}>Loading...</span>}
           </label>
           <label className="admin-actions-label">Severity
             <select

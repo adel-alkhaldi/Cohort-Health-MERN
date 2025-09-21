@@ -1,5 +1,8 @@
 import Participant from "../models/Participant.js";
 
+/**
+ * Returns the weekly report for a cohort and weekStart, using new incident flagging rules.
+ */
 export async function getWeeklyReport(cohort, weekStart) {
   const pipeline = [
     { $match: { cohort } },
@@ -8,14 +11,16 @@ export async function getWeeklyReport(cohort, weekStart) {
         from: "attendances",
         let: { pid: "$_id" },
         pipeline: [
-          { $match: {
+          {
+            $match: {
               $expr: {
                 $and: [
                   { $eq: ["$participantId", "$$pid"] },
                   { $eq: ["$weekStart", new Date(weekStart)] }
                 ]
               }
-          }}
+            }
+          }
         ],
         as: "attendances"
       }
@@ -49,13 +54,52 @@ export async function getWeeklyReport(cohort, weekStart) {
         avgBPsys: { $avg: "$attendances.sessionVitals.bpSystolic" },
         avgBPdia: { $avg: "$attendances.sessionVitals.bpDiastolic" },
         avgGripStrengthSec: { $avg: "$attendances.sessionVitals.GripStrengthSec" },
+        // New flagCount logic
         flagCount: {
           $sum: {
             $cond: [
               {
                 $or: [
-                  { $gte: ["$attendances.sessionVitals.bpSystolic", 150] },
-                  { $gte: ["$attendances.sessionVitals.bpDiastolic", 90] }
+                  { $and: [
+                    { $ne: ["$attendances.sessionVitals.GripStrengthSec", null] },
+                    { $lt: ["$attendances.sessionVitals.GripStrengthSec", 30] }
+                  ]},
+                  { $and: [
+                    { $ne: ["$attendances.sessionVitals.Hba1c", null] },
+                    { $gte: ["$attendances.sessionVitals.Hba1c", 42] }
+                  ]},
+                  { $and: [
+                    { $ne: ["$attendances.sessionVitals.bpSystolic", null] },
+                    { $lt: ["$attendances.sessionVitals.bpSystolic", 90] }
+                  ]},
+                  { $and: [
+                    { $ne: ["$attendances.sessionVitals.bpSystolic", null] },
+                    { $gt: ["$attendances.sessionVitals.bpSystolic", 130] }
+                  ]},
+                  { $and: [
+                    { $ne: ["$attendances.sessionVitals.bpDiastolic", null] },
+                    { $lt: ["$attendances.sessionVitals.bpDiastolic", 60] }
+                  ]},
+                  { $and: [
+                    { $ne: ["$attendances.sessionVitals.bpDiastolic", null] },
+                    { $gt: ["$attendances.sessionVitals.bpDiastolic", 90] }
+                  ]},
+                  { $and: [
+                    { $ne: ["$attendances.sessionVitals.glucoseMgdl", null] },
+                    { $lt: ["$attendances.sessionVitals.glucoseMgdl", 70] }
+                  ]},
+                  { $and: [
+                    { $ne: ["$attendances.sessionVitals.glucoseMgdl", null] },
+                    { $gte: ["$attendances.sessionVitals.glucoseMgdl", 100] }
+                  ]},
+                  { $and: [
+                    { $ne: ["$attendances.sessionVitals.RHR", null] },
+                    { $lt: ["$attendances.sessionVitals.RHR", 50] }
+                  ]},
+                  { $and: [
+                    { $ne: ["$attendances.sessionVitals.RHR", null] },
+                    { $gt: ["$attendances.sessionVitals.RHR", 100] }
+                  ]}
                 ]
               },
               1,
@@ -69,6 +113,7 @@ export async function getWeeklyReport(cohort, weekStart) {
         attendanceCodes: { $addToSet: "$attendances.attendanceCode" },
         attendanceDetails: {
           $addToSet: {
+            attendanceId: "$attendances._id",
             participantId: "$_id",
             participantName: "$fullName",
             sessionId: "$attendances.sessionId",
@@ -92,11 +137,43 @@ export async function getWeeklyReport(cohort, weekStart) {
         avgBPsys: 1,
         avgBPdia: 1,
         avgGripStrengthSec: 1,
+        // Correct flagPercent logic: flagged attendances / total attendances * 100
         flagPercent: {
           $cond: [
             { $eq: ["$totalAttendanceRecords", 0] },
             0,
-            { $multiply: [{ $divide: ["$flagCount", "$totalAttendanceRecords"] }, 100] }
+            {
+              $multiply: [
+                {
+                  $divide: [
+                    {
+                      $size: {
+                        $filter: {
+                          input: "$attendanceDetails",
+                          as: "att",
+                          cond: {
+                            $in: [
+                              "$$att.attendanceId",
+                              {
+                                $setUnion: {
+                                  $reduce: {
+                                    input: "$incidents",
+                                    initialValue: [],
+                                    in: { $concatArrays: ["$$value", "$$this.attendanceId"] }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "$totalAttendanceRecords"
+                  ]
+                },
+                100
+              ]
+            }
           ]
         },
         retention: {
@@ -116,7 +193,7 @@ export async function getWeeklyReport(cohort, weekStart) {
           }
         },
         attendanceCodes: 1,
-        attendanceDetails: 1 // <-- Add this line
+        attendanceDetails: 1
       }
     }
   ];
@@ -124,7 +201,7 @@ export async function getWeeklyReport(cohort, weekStart) {
 }
 
 export async function getAllReportWeeks() {
-  // Returns all distinct weekStart dates in Attendance collection, sorted descending
+  // Returns all distinct weekStart dates in Attendance collection, sorted descending (newest first)
   const weeks = await import("../models/Attendance.js").then(({ default: Attendance }) =>
     Attendance.distinct("weekStart")
   );
