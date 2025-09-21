@@ -43,7 +43,6 @@ Create a `.env` file in the `server` folder:
 
 ```
 PORT=3000
-MONGO_URI=mongodb+srv://test:test@cluster0.r02bnfb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
 ```
 
 ### **Frontend Port Configuration**
@@ -75,7 +74,8 @@ npm run dev
 ---
 
 ## Usage
-- Data is already populated and existing in the mongoDB atlas
+- ~~Data is already populated and existing in the mongoDB atlas~~
+- Populate with your own data. I have removed defaults of MongoDB atlas that had the data and everything, If you had access, you will still have it.
 - Open [http://localhost:5000](http://localhost:5000) in your browser.
 - Use the sidebar to navigate between Dashboard, Weekly Reports, Watch Cases, Admin Actions, and Session Viewer.
 - Use **Admin Actions** to add participants, sessions, attendance, and incidents.
@@ -85,16 +85,16 @@ npm run dev
 # Roadmap
 
 ## V1.1
-- [ ] General code cleanup of unused functions in frontend pages & backend services & controllers
+- [x] General code cleanup of unused functions in frontend pages & backend services & controllers
 
 ## V1.2
-- [ ] Add Full Validation to the data in the backend  
-  - [ ] EID needs to be 15 digits exactly (starting with **784**)  
-  - [ ] Numbers need to have **+971** for the country code & be 13 digits in total  
-  - [ ] Refine the Watch Cases for the current metrics (if they are above or below a certain range)
+- [x] Add Full Validation to the data in the backend  
+  - [x] EID needs to be 15 digits exactly (starting with **784**)  
+  - [x] Numbers need to have **+971** for the country code & be 13 digits in total  
+  - [x] Refine the Watch Cases for the current metrics (if they are above or below a certain range)
 
 ## V1.3
-- [ ] Refine the error messages and make it more obvious which input field is incorrect
+- [x] Refine the error messages and make it more obvious which input field is incorrect
 
 ## V1.4
 - [ ] Split up Admin Actions Page into multiple routes and separate pages for later **RBAC Login Setup**
